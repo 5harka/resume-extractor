@@ -1,5 +1,5 @@
-from langchain_ollama import OllamaLLM
-import tensorflow as tf
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
 
 json_content = """{
     "name": "",
@@ -44,7 +44,6 @@ json_content = """{
     "professinal_training":""
 }"""
 
-
 class InputData:
     @staticmethod
     def input_data(text):
@@ -69,10 +68,8 @@ class InputData:
 
     @staticmethod
     def llm():
-        # Check if GPU is available
-        physical_devices = tf.config.list_physical_devices('GPU')
-        if len(physical_devices) > 0:
-            tf.config.experimental.set_memory_growth(physical_devices[0], True)
-
-        llm = OllamaLLM(model="llama3")
-        return llm
+        # Load the Pythia model and tokenizer
+        model_name = "EleutherAI/pythia-1.4b"
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModelForCausalLM.from_pretrained(model_name)
+        return model, tokenizer
