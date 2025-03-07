@@ -3,76 +3,77 @@ import tensorflow as tf
 
 json_content = """{
     "name": "",
-    "email" : "",
+    "email_1": "",
     "phone_1": "",
-    "phone_2": "",
-    "address": "",
-    "city": "",
-    "linkedin": "",
+    "country": "",
     "professional_experience_in_years": "",
-    "highest_education": "",
-    "is_fresher": "yes/no",
-    "is_student": "yes/no",
-    "skills": ["",""],
-    "applied_for_profile": "",
+    "job_title": "",
+    "nationality": "",
+    "date_of_birth": "",
+    "relationship_status": "Single/Married/Prefer not to Mention",
+    "languages": ["",""],
+    "drivers_license": "Yes/No",
     "education": [
         {
-            "institute_name": "",
-            "year_of_passing": "",
-            "score": ""
-        },
-        {
-            "institute_name": "",
-            "year_of_passing": "",
-            "score": ""
+            "university_name": "",
+            "degree_name": "",
+            "gradution_date": "",
+            "country": ""
         }
     ],
     "professional_experience": [
         {
             "organisation_name": "",
-            "duration": "",
-            "profile": ""
-        },
-        {
-            "organisation_name": "",
-            "duration": "",
-            "profile": ""
+            "position": "",
+            "start_date": "",
+            "end_date": "",
+            "country": "",
+            "duties": ["",""],
+            "projects": ["",""]
         }
-    ]
-    "memberships":"",
-    "key_qualifications":"",
-    "professinal_training":""
+    ],
+    "memberships": "",
+    "key_qualifications": "",
+    "professinal_training": ""
 }"""
-
 
 class InputData:
     @staticmethod
     def input_data(text):
-        input = f"""Extract relevant information from the following resume text and fill the provided JSON template. Ensure all keys in the template are present in the output, even if the value is empty or unknown. If a specific piece of information is not found in the text, use 'Not provided' as the value.
-
-        Resume text:
+        input = f"""
+        Resume text chunk:
         {text}
 
         JSON template:
         {json_content}
 
-        Instructions:
-        1. Carefully analyse the resume text.
-        2. Extract relevant information for each field in the JSON template.
-        3. If a piece of information is not explicitly stated, make a reasonable inference based on the context.
-        4. Ensure all keys from the template are present in the output JSON.
-        5. Format the output as a valid JSON string.
+        Extract information from this resume chunk following these rules:
+        1. Fill only the information explicitly present in this chunk
+        2. Mark missing fields as 'Not provided'
+        3. For list fields (education, experience), add only new entries
+        4. Never repeat existing information from previous chunks
+        5. Format dates as YYYY-month or "Present" if it is mentioned
+        6. For companies, aggregate all roles/duties/projects
+        7. For key_qualification just show their qualifications with no extra data (year, name).
+        8. Output only JSON without comments
 
-        Output the filled JSON template only, without any additional text or explanations."""
-
+        Current chunk context: This is part of a larger resume. 
+        Some fields might be split across chunks. Only add new information.
+        """
         return input
+
 
     @staticmethod
     def llm():
-        # Check if GPU is available
-        physical_devices = tf.config.list_physical_devices('GPU')
-        if len(physical_devices) > 0:
-            tf.config.experimental.set_memory_growth(physical_devices[0], True)
+        try:
+            # Check if GPU is available
+            physical_devices = tf.config.list_physical_devices('GPU')
+            if len(physical_devices) > 0:
+                tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-        llm = OllamaLLM(model="llama3")
-        return llm
+            # Initialize Ollama LLM
+            llm = OllamaLLM(model="llama3")
+            return llm
+        except Exception as e:
+            print(f"Error initializing LLM: {e}")
+            return None
